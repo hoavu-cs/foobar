@@ -5,37 +5,28 @@ max_size = 5
 # dynamic programming table that stores f(i) to avoid recomputation
 DP = [[-1, -1] for i in range(max_size)]
 
-DP[3][0] = 0
-DP[3][1] = 0
-DP[4][0] = 0
-DP[4][1] = 0
-DP[2][0] = 1
-DP[2][1] = 0
 
-DP[0][0] = 0
-DP[0][1] = 1
-
-def f(i, p, n): 
-    # return the probability of getting to state i in terms of a_0 starting at state i
+def f(i, k, p, n): 
+    # return the probability of getting to state k in terms of a_0 starting at state i
     # p is the probability transition matrix
     # a_0 is the probability of getting to state i from state 0 
     # returns u and v such that f(i) = u + v a_0
     
     #print(i)
     #print(DP[0])
-    if p[i][i] == Fraction(1,1):
+    if p[i][i] == 1 and i != k:
         DP[i][0] = 0
-        DP[i][1] = 1
+        DP[i][1] = 0
+    elif i == k:
+        DP[i][0] = 1
+        DP[i][1] = 0
     else:
         u = 0
         v = 0
         for j in range(n):
             if p[i][j] > 0:
-                if p[j][j] == 1 and j != i:
-                    DP[j][0] = 0
-                    DP[j][0] = 0
-                elif DP[j][0] == -1:
-                    f(j, p, n) 
+                if DP[j][0] == -1:
+                    f(j, k, p, n) 
                 u +=  p[i][j] * DP[j][0]
                 v +=  p[i][j] * DP[j][1]
 
@@ -55,16 +46,16 @@ def solution(m):
         if row_sum == 0:
             p[i][i] = Fraction(1,1)
             term_st.add(i)
-            DP[i][0] = 1
-            DP[i][1] = 0
         else:
             for j in range(n):
                 p[i][j] = Fraction(m[i][j], row_sum)
 
     # compute u, v such that a_i = u + v a_i and then a_i = u/(1-v)
-    #for i in term_st:
-    f(2, p, n)
-    print(DP)
+    for i in term_st:
+        DP = [[-1, -1] for i in range(max_size)]
+        f(0, i, p, n)
+        print(DP)
+    
 
         #abs_prob[i] = Fraction(DP[i][0],1-DP[i][1])
     return abs_prob

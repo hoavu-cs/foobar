@@ -6,20 +6,17 @@ max_size = 5
 DP = [[-1, -1] for i in range(max_size)]
 
 
-def f(i, k, p, n): 
-    # return the probability of getting to state k in terms of a_0 starting at state i
-    # p is the probability transition matrix
-    # a_0 is the probability of getting to state i from state 0 
-    # returns u and v such that f(i) = u + v a_0
+def f(i, k, p, n, flag): 
+    # let p_ik be the probability of geting to a terminal state k from state i
+    # p is the probability transition matrix, n is the number of states
+    # returns u and v such that p_ik = u p_0k + v
     
-    #print(i)
-    #print(DP[0])
     if p[i][i] == 1 and i != k:
         DP[i][0] = 0
         DP[i][1] = 0
-    elif i == k:
-        DP[i][0] = 1
-        DP[i][1] = 0
+    elif p[i][i] == 1 and i == k:
+        DP[i][0] = 0
+        DP[i][1] = 1
     else:
         u = 0
         v = 0

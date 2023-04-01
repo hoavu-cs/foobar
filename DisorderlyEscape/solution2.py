@@ -70,11 +70,10 @@ def solution(w, h, s):
         print("k={}, row_configs={}, col_configs={}, ret={}").format(k, row_configs, col_configs, ret)
     return ret
 
-print(g(1,1,1))
-print(g(4,3,2))
-print(g(4,3,4))
+#print(g(1,1,1))
+#print(g(4,3,2))
+#print(g(4,3,4))
 #print(g(0,0,2) == 1)
 
 print(solution(2,2,2))
-#assert(solution(2,2,2) == 7)
-#assert(solution(2,3,4) == 430)
+print(solution(2,3,4))

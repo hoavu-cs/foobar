@@ -5,9 +5,9 @@ def comb(a, b):
 
 
 
-def g(a, b, c):
-    # return the number of ways to partition a identical elements into b non-empty sets where
-    # each set has size at most c 
+def partition(a, b, c):
+    # return the partitions [a]={1,2,...,a} into b sets of sizes 
+    # at most c
     DP = [[[0 for k in range(c+1)] for j in range(b+1)] for i in range(a+1)]
 
     for i in range(a+1):
@@ -19,7 +19,6 @@ def g(a, b, c):
                     DP[i][j][k] == 0
                 else:
                     for t in range(1, min(i, k)+1):
-
                         DP[i][j][k] += DP[i-t][j-1][t]
     return DP[a][b][c]
 

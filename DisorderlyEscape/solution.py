@@ -1,98 +1,84 @@
 import math
+import itertools 
 
-def comb(u, v):
-    return math.factorial(u)/(math.factorial(u-v)*math.factorial(v))
+# def test_prod_enu(w, h, s):
 
-def count_constraint_partitions(i, j, k):
-    """
-    Return the dynamic programming table for the following problem:
-    count the number of ways to write an interger i >= 0 as an ordered sum of j non-negative
-    integers whose value is at most k (ignoring permutations of same numbers).
-    For example, if i = 3, j = 3, k = 2, then we have the following possibilities
-    1 + 1 + 1
-    1 + 2 + 0
-    2 + 1 + 0
-    0 + 1 + 2
-    0 + 2 + 1
-    1 + 0 + 2
-    2 + 0 + 1
-    """
-    D = [[[0 for c in range(k+1)] for b in range(j+1)] for a in range(i+1)]
 
-    for a in range(i+1):
-        for b in range(j+1):
-            for c in range(k+1):
-                if a == 0:
-                    D[a][b][c] = 1
-                elif a > 0 and b == 0:
-                    D[a][b][c] = 0
-                elif a > 0 and b > 0 and c == 0:
-                    D[a][b][c] = 0
-                else:
-                    for t in range(1, min(a+1, c+1)):
-                        for q in range(1, min(int(a/t), b)+1):
-                            #print("a={}, b={}, c={}, t={}, q={}, D[]={}, comb = {}".format( a,b,c,t,q, D[a-q*t][b-q][t-1], comb(b, q)))
-                            D[a][b][c] += D[a-q*t][b-q][t-1]*comb(b, q)
-                            #print("a={}, b={}, c={}, D={}".format(a,b,c,D[a][b][c]))
-    return D
+def factorize(n):
+    # output the prime factorization of n assume all primes are the first 20 primes
+    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+    factorization = []
+    while n > 1:
+        for x in primes:
+            if n % x == 0:
+                factorization.append(x)
+                n = n/x
+    factorization.sort()
+    return factorization
+
+
+def product(L):
+    x = 1
+    for y in L:
+        x *= y
+    return x
 
 
 def solution(w, h, s):
     """
-    Solution sketch
-    Consider the sequences (r_1, r_2,..., r_h), (c_1, c_2,..., c_w) 
-    that are sorted row sums and column sums respectively.
-    These two uniquely determine equivalent configurations as row or column
-    exchange do not change the sequences. Furthermore, they form h*w linear 
-    equations for h*w variables and therefore the entries must be unique if 
-    exist.
-
-    For example, for s=2 the sequences r=(2,0) and c=(1,1) gives
-    [1 1
-     0 0]. Another examples r=(1,1), c=(1,1) gives
-    [1 0
-    1 0].
-    Note that not every pair of sequences corresponds to a configuration.
-    If s=2, then r=(2,0), c=(2,0) is not possible (but this is possible if
-    s=3).
-    So the idea is to count the number of possible sequence-pair given w, h, and s.
-
+    Let r_1, r_2,..., r_h and c_1, c_2,..., c_w be non-increasing sequences.
+    Note that swapping rows or columns do not change the sequences if they
+    correspond to the row or column sums. However, such sequences do not uniquely 
+    identify the matrix.
+    For example, c_1 = 5, c_2 = 5, r_1 = 7, r_2 = 2, r_3 = 1 and m = 5.
+    Then we have two possible configurations
+    [4 3, 1 1, 0 1] or [5 2, 2 0, 1 0].
+    Here, instead, we map number i to the ith prime numbers. This guarantees that
+    their product is unique.
+    The task is to enumerate through all possible sequences r_i (or c_j) where r_i
+    is the product of corresponding prime numbers in row i (or  column j respectively).
+    We also need to check if a pair of sequences is valid.
     """
-    s = s-1
-
-    # pre-compute the number of ways to split a column-sum sums into h parts 
-    # that corresponding to the values of the rows of that column and p = sum of the entries
-    D = count_constraint_partitions(s*h, h, s)
-
-    # T[i][p][k] = number of valid configuration for fixed h and s but with i columns
-    # where max column sum is z
-    T = [[[0 for k in range(s*h+1)] for j in range(s*h*w+1)] for i in range(w+1)]
-    for p in range(s*h*w+1):
-        for z in range(s*h+1):
-            for i in range(w+1):        
-                if p == 0:
-                    T[i][p][z] = 1
-                elif i == 0 and p > 0:
-                    T[i][p][z] = 0
-                elif i > 0 and p > 0 and z == 0:
-                    T[i][p][z] = 0
-                else:
-                    for q in range(1, min(int(p/z), i)+1):
-                        T[i][p][z] += math.pow(D[z][h][s], q)*T[i-q][p-q*z][z-1]
-                    
-                    #for q in range(min(z+1, p+1)):
-                    #    T[i][p][z] += D[t][h][s]*T[i-1][p-t][t]
-                    if i == 2:
-                        print("({},{},{}) = {}".format(i,p,z,T[i][p][z]))
+    # P[i][j] contains the list of possible products of i numbers using the first j primes
+    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+    T = [[[] for j in range(s)] for i in range(max(w,h))]
+    for i in range(max(w,h)):
+        for j in range(s):
+            if i == 0:
+                T[i][j] = [k for k in primes[:s]]
+            elif j == 0:
+                T[i][j] = [math.pow(primes[0], i+1)]
+            else:
+                T[i][j] = T[i][j-1] + [primes[j]*k for k in T[i-1][j]]
 
     result = 0
-    # for p in range(s*h*w+1):
-    #     print("p={}, {}".format(p, T[w][p][s*h]))
-    # print(T[2][2][1])
-    for p in range(s*h*w+1):
-        for z in range(s*h+1):
-            result += T[w][p][z]
+    #print(list(itertools.combinations_with_replacement(T[h-1][s-1], h)))
+    for C in list(itertools.combinations_with_replacement(T[w-1][s-1], w)):
+        F = []
+        P = [1 for i in range(h)]
+        for i in C:
+            F.append(factorize(i))
+        for i in range(h):
+            for j in range(w):
+                P[i] = P[i]*F[j][i]
+
+        for R in list(itertools.combinations_with_replacement(T[h-1][s-1], h)):
+            #print("{}, {}".format(C, R))
+            valid = True
+            for y in range(len(R)):
+                if R[y] != P[y]:
+                    valid = False
+            if valid == True:
+                print("{},{}".format(C, R))
+                result += 1
+
     return result
-#print(count_constraint_partitions(3,3,2))
+
+
+
+
+
+
+#print(test_prod_enu(2, 1, 2))
+#print(factorize(44))
 print(solution(2,2,2))
-#print(count_constraint_partitions(2, 2, 1))

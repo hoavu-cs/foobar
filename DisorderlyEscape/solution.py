@@ -16,12 +16,46 @@ def factorize(n):
     factorization.sort()
     return factorization
 
+def unique_products(u, v):
+    # return the unique product sequences between u and v up to permutations
+    # u and v must have length at least 1
+    u.sort()
+    r = 1
+    U = []
+    V = []
 
-def product(L):
-    x = 1
-    for y in L:
-        x *= y
-    return x
+    for i in range(len(u)-1):
+        if u[i] == u[i+1]:
+            r += 1
+            break
+
+    for p in list(itertools.combinations(v, r)):
+        if p in V:
+            continue
+        else:
+            V.append(p)
+        q = [x for x in v]
+        z = [0 for x in range(r)]
+        j = 0
+        for x in p:
+            q.remove(x)
+            z[j] = u[j]*x
+            j += 1
+        W = unique_products(u[r:], q)     
+
+        if len(q) > 0:
+            W = unique_products(u[r:], q) 
+            for w in W:
+                z_copy = z + w
+                z_copy.sort()
+                if z_copy not in U:
+                    U.append(z_copy)
+        else:
+            z.sort()
+            if z not in U:
+                U.append(z)
+
+    return U
 
 
 def solution(w, h, s):
@@ -41,8 +75,8 @@ def solution(w, h, s):
     """
     # P[i][j] contains the list of possible products of i numbers using the first j primes
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
-    T = [[[] for j in range(s)] for i in range(max(w,h))]
-    for i in range(max(w,h)):
+    T = [[[] for j in range(s)] for i in range(h)]
+    for i in range(h):
         for j in range(s):
             if i == 0:
                 T[i][j] = [k for k in primes[:s]]
@@ -50,27 +84,25 @@ def solution(w, h, s):
                 T[i][j] = [math.pow(primes[0], i+1)]
             else:
                 T[i][j] = T[i][j-1] + [primes[j]*k for k in T[i-1][j]]
+                T[i][j] = list(set(T[i][j]))
 
     result = 0
-    #print(list(itertools.combinations_with_replacement(T[h-1][s-1], h)))
-    for C in list(itertools.combinations_with_replacement(T[w-1][s-1], w)):
-        F = []
-        P = [1 for i in range(h)]
-        for i in C:
-            F.append(factorize(i))
-        for i in range(h):
-            for j in range(w):
-                P[i] = P[i]*F[j][i]
-
-        for R in list(itertools.combinations_with_replacement(T[h-1][s-1], h)):
-            #print("{}, {}".format(C, R))
-            valid = True
-            for y in range(len(R)):
-                if R[y] != P[y]:
-                    valid = False
-            if valid == True:
-                print("{},{}".format(C, R))
-                result += 1
+    for C in list(itertools.combinations_with_replacement(T[h-1][s-1], w)):     
+        configs = []
+        for c in C:
+            new_configs = []
+            F = factorize(c)
+            if len(configs) == 0:
+                new_configs.append(F)
+            else:
+                for d in configs:
+                    for e in unique_products(d, F):
+                        e.sort()
+                        if tuple(e) not in new_configs:
+                            new_configs.append(e)
+            configs = new_configs
+        print("C={}, configs={}".format(C,configs))
+        result += len(configs)
 
     return result
 
@@ -78,7 +110,9 @@ def solution(w, h, s):
 
 
 
-
+#A = unique_products([2, 2, 3, 3], [5, 7, 7, 11])
+#for a in A:
+#    print(a)
 #print(test_prod_enu(2, 1, 2))
 #print(factorize(44))
 print(solution(2,2,2))
